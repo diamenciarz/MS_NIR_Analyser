@@ -17,8 +17,11 @@ app.layout = html.Div([
     prevent_initial_call=True
 )
 def update_graph(b1, b2):
+    # We know how many times a button has been clicked but 
+    print(b1, b2)
     triggered_id = ctx.triggered_id
-    print(triggered_id)
+    print(ctx.args_grouping)
+    print(ctx.triggered_prop_ids)
     if triggered_id == 'reset':
          return reset_graph()
     elif triggered_id == 'draw':
