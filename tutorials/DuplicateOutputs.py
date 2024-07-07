@@ -1,6 +1,7 @@
 from dash import Dash, Input, Output, ctx, html, dcc, callback
 import plotly.express as px
 import plotly.graph_objects as go
+import webbrowser
 
 app = Dash(__name__)
 
@@ -35,4 +36,6 @@ def reset_graph():
     return go.Figure()
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5081)
+    port = 5081
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=0)
+    app.run(debug=True, port=port)
