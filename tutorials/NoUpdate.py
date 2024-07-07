@@ -1,5 +1,6 @@
 from dash import Dash, dcc, html, Input, Output, callback, no_update
 from dash.exceptions import PreventUpdate
+import webbrowser
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -45,4 +46,6 @@ def prime_factors(num):
     return out
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = 5082
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=0)
+    app.run(debug=True, port=port)

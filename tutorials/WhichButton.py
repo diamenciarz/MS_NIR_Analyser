@@ -1,5 +1,6 @@
 import json
 from dash import Dash, html, Input, Output, callback, ctx
+import webbrowser
 
 app = Dash(__name__)
 
@@ -14,9 +15,11 @@ app.layout = html.Div([
 @callback(Output('container', 'children'),
               Input('btn-1', 'n_clicks'),
               Input('btn-2', 'n_clicks'),
-              Input('btn-3', 'n_clicks'))
+              Input('btn-3', 'n_clicks'),
+            # prevent_initial_call=True)
+                )
 def display(btn1, btn2, btn3):
-    button_id = ctx.triggered_id if not None else 'No clicks yet'
+    button_id = ctx.triggered_id if not None else 'No clicks yet'   
 
     ctx_msg = json.dumps({
         'states': ctx.states,
@@ -40,4 +43,6 @@ def display(btn1, btn2, btn3):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = 5080
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=2)
+    app.run(debug=True, port=port)

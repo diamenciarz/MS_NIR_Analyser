@@ -1,5 +1,6 @@
 from dash import Dash, html, Input, Output, callback
 from dash.exceptions import PreventUpdate
+import webbrowser
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -21,4 +22,6 @@ def update_output(n_clicks):
         return "Elephants are the only animal that can't jump"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = 5081
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=0)
+    app.run(debug=True, port=port)

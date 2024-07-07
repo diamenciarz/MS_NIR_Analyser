@@ -1,5 +1,6 @@
 from dash import Dash, dcc, html, Input, Output, State, callback
 import time
+import webbrowser
 
 app = Dash(__name__)
 
@@ -32,4 +33,6 @@ def update_output(n_clicks, value):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = 5082
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=0)
+    app.run(debug=True, port=port)
