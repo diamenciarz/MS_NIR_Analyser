@@ -3,6 +3,8 @@ from dash import Dash, html, dash_table, dcc, callback, Output, Input
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
+import webbrowser
+
 
 # Incorporate data
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
@@ -14,7 +16,7 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 # App layout
 app.layout = dbc.Container([
     dbc.Row([
-        html.Div('My First App with Data, Graph, and Controls', className="text-primary text-center fs-3")
+        html.Div('Data, Graph, and Controls', className="text-primary text-center fs-3")
     ]),
 
     dbc.Row([
@@ -47,4 +49,7 @@ def update_graph(col_chosen):
 
 # Run the app
 if __name__ == '__main__':
-    app.run(debug=True, port=5080)
+    port = 5080
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=0)
+    app.run(debug=True, port=port)
+    
