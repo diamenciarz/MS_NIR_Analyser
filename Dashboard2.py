@@ -1,13 +1,12 @@
-from dash import dash_table, Dash, dcc, html, Input, Output, State, callback
+from dash import Dash, dcc, html, Input, Output, State, callback
 import plotly.graph_objects as go
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import webbrowser
 import pandas as pd
-import numpy as np
 import base64
 import io
-import json
+
 
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_stylesheets = [dbc.themes.CERULEAN]
@@ -26,7 +25,7 @@ app.layout = dbc.Container([
     ]),
     dbc.Row([
         dcc.Upload(
-        id='upload',
+        id='upload-table',
         children=html.Div([
             'Drag and Drop or ',
             html.A('Select Files')
@@ -45,12 +44,17 @@ app.layout = dbc.Container([
         multiple=True
         ),
     ]),
-    dbc.Row(id="dropdown-div"),
+    # dbc.Row([
+    #     dbc.RadioItems(options=[{"label": x, "value": x} for x in ['pop', 'lifeExp', 'gdpPercap']],
+    #                    value='lifeExp',
+    #                    inline=True,
+    #                    id='radio-buttons-final')
+    # ]),
     dbc.Row(id="graph-div"),
-    dcc.Store(id='data-store')
 ], fluid=True)
 
-def read_data(contents, filename):
+def parse_contents(contents, filename):
+    print(filename)
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     if ".csv" in filename:
@@ -61,47 +65,29 @@ def read_data(contents, filename):
         df = pd.read_excel(io.BytesIO(decoded))
     
     df = df.set_index(df.columns[0])
-    return df
+    df.index.name = "Y"
+    fig = go.Figure()
+    for i in range(df.shape[0]):
+        fig.add_trace(go.Scatter(x=df.columns, y=df.iloc[i], name=str(df.index[i])))
 
-def calculate_counts(df):
-    # names, counts = df.index.value_counts()
-    counts = df.index.value_counts()
-    df_counts = pd.DataFrame(counts.sort_values()).reset_index()
-    return df_counts
-
-def parse_contents(contents, filename):
-    df = read_data(contents, filename)
-    df_counts = calculate_counts(df)
+    fig.update_layout(clickmode='event+select', title=filename)
+    fig.update_xaxes(title_text="mz")
+    fig.update_yaxes(title_text="Intensity")
+    fig.update_traces(marker_size=20)
+    return dcc.Graph(figure=fig, id='data-plot')
     
-    
-    table = dash_table.DataTable(data=df_counts.to_dict('records'), columns=[{"name": i, "id": i} for i in df_counts.columns], page_size=6, id="tbl")
-    return html.Div([html.H3(filename), table])
-
-@callback(Output('data-store', 'data'),
-            Input('upload', 'contents'),
-            State('upload', 'filename'),
-            prevent_initial_call=True)
-def save_data(list_of_contents, list_of_names):
-        data_frames = [read_data(c, n) for c, n in
-            zip(list_of_contents, list_of_names)]
-        data = {"data_frames":data_frames, "filenames":list_of_names}
-        json.dumps
-        return cleaned_df.to_json(date_format='iso', orient='split')
-
-@callback(Output('dropdown-div', 'value'),
-            Input('upload', 'contents'),
-            State('upload', 'filename'),
-            prevent_initial_call=True)
-def update_dropdown(list_of_contents, list_of_names):
-    if list_of_contents is not None:
-        children = dcc.Dropdown(list_of_names, list_of_names[0])
-        
-        return children
 
 @callback(Output('graph-div', 'children'),
-          Input('dropdown-div', 'value'),
-            prevent_initial_call=True)
-def update_table(contents, filename):
+            Input('upload-table', 'contents'),
+            State('upload-table', 'filename'),
+            prevent_initial_call=True
+            )
+def update_output(list_of_contents, list_of_names):
+    if list_of_contents is not None:
+        children = [
+            parse_contents(c, n) for c, n in
+            zip(list_of_contents, list_of_names)]
+        return children
 
 if __name__ == '__main__':
     port = 5081
