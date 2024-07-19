@@ -3,7 +3,7 @@ from dash import Dash, dcc, html, Input, Output, State, callback
 import datetime
 import webbrowser
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.CERULEAN]
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 

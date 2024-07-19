@@ -10,11 +10,7 @@ from flask_caching import Cache
 import webbrowser
 
 
-external_stylesheets = [
-    # Dash CSS
-    'https://codepen.io/chriddyp/pen/bWLwgP.css',
-    # Loading screen CSS
-    'https://codepen.io/chriddyp/pen/brPBPO.css']
+external_stylesheets = [dbc.themes.CERULEAN]
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
