@@ -9,6 +9,9 @@ import base64
 import io
 import json
 
+# Create a special class that would save and load DataFrames into a json file
+
+
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_stylesheets = [dbc.themes.CERULEAN]
 app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -45,12 +48,12 @@ app.layout = dbc.Container([
         multiple=True
         ),
     ]),
-    dbc.Row(id="dropdown-div"),
+    dbc.Row(dcc.Dropdown(["Empty"], "Empty", id="dropdown"), id="dropdown-div"),
     dbc.Row(id="graph-div"),
     dcc.Store(id='data-store')
 ], fluid=True)
 
-def read_data(contents, filename):
+def read_df(contents, filename):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     if ".csv" in filename:
@@ -63,47 +66,50 @@ def read_data(contents, filename):
     df = df.set_index(df.columns[0])
     return df
 
+@callback(Output('data-store', 'data'),
+            Input('upload', 'contents'),
+            State('upload', 'filename'),
+            prevent_initial_call=True)
+def save_data(list_of_contents, list_of_names):
+        if list_of_contents is not None:
+            data_frames = [read_df(c, n) for c, n in
+                zip(list_of_contents, list_of_names)]
+            df_dict = {name:df.to_json(date_format='iso', orient='split') for df, name in zip(data_frames, list_of_names)}
+            
+            return json.dumps(df_dict)
+
+@callback(Output('dropdown-div', 'children'),
+            Input('data-store', 'data'),
+            prevent_initial_call=True)
+def update_dropdown(json_data):
+    df_dict = json.loads(json_data)
+    list_of_names = list(df_dict.keys())
+    children = dcc.Dropdown(list_of_names, list_of_names[0], id="dropdown")
+    
+    return children
+
 def calculate_counts(df):
     # names, counts = df.index.value_counts()
     counts = df.index.value_counts()
     df_counts = pd.DataFrame(counts.sort_values()).reset_index()
     return df_counts
 
-def parse_contents(contents, filename):
-    df = read_data(contents, filename)
-    df_counts = calculate_counts(df)
-    
-    
-    table = dash_table.DataTable(data=df_counts.to_dict('records'), columns=[{"name": i, "id": i} for i in df_counts.columns], page_size=6, id="tbl")
-    return html.Div([html.H3(filename), table])
-
-@callback(Output('data-store', 'data'),
-            Input('upload', 'contents'),
-            State('upload', 'filename'),
-            prevent_initial_call=True)
-def save_data(list_of_contents, list_of_names):
-        data_frames = [read_data(c, n) for c, n in
-            zip(list_of_contents, list_of_names)]
-        data = {"data_frames":data_frames, "filenames":list_of_names}
-        json.dumps
-        return cleaned_df.to_json(date_format='iso', orient='split')
-
-@callback(Output('dropdown-div', 'value'),
-            Input('upload', 'contents'),
-            State('upload', 'filename'),
-            prevent_initial_call=True)
-def update_dropdown(list_of_contents, list_of_names):
-    if list_of_contents is not None:
-        children = dcc.Dropdown(list_of_names, list_of_names[0])
-        
-        return children
-
 @callback(Output('graph-div', 'children'),
-          Input('dropdown-div', 'value'),
-            prevent_initial_call=True)
-def update_table(contents, filename):
+          Input('dropdown', 'value'),
+          Input('data-store', 'data'),
+          prevent_initial_call=True)
+def update_table(filename, json_data):
+    print("Dropdown", filename)
+    df_dict = json.loads(json_data)
+    if filename in df_dict.keys():
+        json_df = df_dict[filename]
+        df = pd.DataFrame(**json.loads(json_df))
+        df_counts = calculate_counts(df)
+        
+        table = dash_table.DataTable(data=df_counts.to_dict('records'), columns=[{"name": i, "id": i} for i in df_counts.columns], id="tbl")
+        return html.Div([html.H3(filename), table])
 
 if __name__ == '__main__':
     port = 5081
-    webbrowser.open(f'http://127.0.0.1:{port}/', new=1)
+    webbrowser.open(f'http://127.0.0.1:{port}/', new=0)
     app.run(debug=True, port=port)
